@@ -1,0 +1,22 @@
+{
+    "version": "0.0.1",
+    "current": "html",
+    "setting": {
+        "title": "title決めてください",
+        "detail": "tmlib.js 用公式エディタ."
+    },
+    "code": {
+        "html": {
+            "type": "html",
+            "value": "{{& myhtml}}"
+        },
+        "style": {
+            "type": "css",
+            "value": "{{& mycss}}"
+        },
+        "script": {
+            "type": "javascript",
+            "value": "{{& myjs}}"
+        }
+    }
+}
