@@ -6,11 +6,11 @@ var fs = require("fs");
 var parseArgs = require('minimist');
 var jszip = require("jszip");
 var hogan = require("hogan.js");
-var argv = parseArgs(process.argv.slice(2));
-var runstantTempl = fs.readFileSync(__dirname + "/../runstant.hjs", "utf-8");
-var spawn = require('child_process').spawn;
 
-var runstantUrl = "http://phi-jp.github.io/runstant/#";
+var spawn = require('child_process').spawn;
+var runstantTempl = fs.readFileSync(__dirname + "/../runstant.hjs", "utf-8");
+var argv = parseArgs(process.argv.slice(2));
+var runstantUrl = "http://phi-jp.github.io/runstant/release/alpha/#";
 
 // html処理
 // カレントディレクトリの.htmlを読み込む
@@ -41,8 +41,13 @@ html = html.replace(/<\/head>/, "<style>${style}</style>\n</head>");
 
 // headタグの<script>${script}</script>を一旦消す。
 // headタグの末尾に<script>${script}</script>を付ける。
-html = html.replace(/<script src=(.*)><\/script>/, "");
-html = html.replace(/<\/head>/, "<script src=\"${script}\"></script>\n</head>");
+html = html.replace(/<script src=(.*)><\/script>/, function (str,p1,offset){
+  if(str.indexOf("http")>0) {
+    return str;
+  }
+  return "";
+});
+html = html.replace(/<\/head>/, "<script>${script}</script>\n</head>");
 
 //console.log(html);
 
