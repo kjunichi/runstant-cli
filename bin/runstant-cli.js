@@ -7,7 +7,7 @@ var parseArgs = require('minimist');
 var jszip = require("jszip");
 var hogan = require("hogan.js");
 var argv = parseArgs(process.argv.slice(2));
-var runstantTempl = fs.readFileSync("./runstant.hjs", "utf-8");
+var runstantTempl = fs.readFileSync(__dirname + "/../runstant.hjs", "utf-8");
 var spawn = require('child_process').spawn;
 
 var runstantUrl = "http://phi-jp.github.io/runstant/#";
@@ -69,10 +69,10 @@ runstantUrl = runstantUrl + myHash;
 //console.log(myHash);
 // OSXなら、open,Windowsならstartで開く
 //console.log(runstantUrl);
-if(process.platform=="darwin") {
-  spawn("open",[runstantUrl]);
-} else if(process.platform=="win32") {
-  spawn("start",[runstantUrl]);
+if (process.platform == "darwin") {
+  spawn("open", [runstantUrl]);
+} else if (process.platform == "win32") {
+  spawn("start", [runstantUrl]);
 } else {
-    console.log(runstantUrl);
+  console.log(runstantUrl);
 }
