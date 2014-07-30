@@ -77,7 +77,7 @@ runstantUrl = runstantUrl + myHash;
 if (process.platform == "darwin") {
   spawn("open", [runstantUrl]);
 } else if (process.platform == "win32") {
-  spawn("start", [runstantUrl]);
+  spawn("cmd", ["/C","start " +runstantUrl]);
 } else {
   console.log(runstantUrl);
 }
