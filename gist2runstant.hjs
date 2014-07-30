@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+
+        <title>${title}</title>
+        <meta name="description" content="${description}" />
+
+        <style>${style}</style>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/jszip/2.3.0/jszip.min.js"></script>
+        <script src="http://rawgithub.com/phi-jp/tmlib.js/613474643676ee5926e7ec9d5e32d28a5489b361/build/tmlib.js"></script>
+		<script>${script}</script>
+    </head>
+    <body>
+    <div>
+        <label>GistのURL/ID</label>
+        <input type="text" id="gistId" value="{{gistUrl}}">
+        <button id="gistBtn">インポート</button>
+    </div>
+    <div id="outPanel"><p>
+    <label>runstant</label>
+    <input type="text" id="hash"><button id="goBtn">Runstant!</button>
+        <br>
+        <label>HTML</label>
+        <textarea id="outHtml" cols="40" rows="5"></textarea>
+        </p>
+        <p>
+        <lable>CSS</lable>
+        <textarea id="outStyle" cols="40" rows="5"></textarea>
+        </p>
+        <p><label>JavaScript</label>
+        <textarea id="outScript" cols="40" rows="5"></textarea>
+        </p>
+        </div>
+        <script type="text/data" id="runstantJson">
+{
+    "version": "0.0.1",
+    "current": "html",
+    "setting": {
+        "title": "tmlib.js template",
+        "detail": "tmlib.js 用公式エディタ. 色々と使えますよ♪"
+    },
+    "code": {
+        "html": {
+            "type": "html",
+            "value": ""
+        },
+        "style": {
+            "type": "css",
+            "value": ""
+        },
+        "script": {
+            "type": "javascript",
+            "value": ""
+        }
+    }
+}
+        </script>
+<script>
+function getCode4Chrome(dom) {
+    var codes = [];
+    var regex = /<pre class=\"line-pre\".*?>(.*?)<\/pre>/g;
+    var match = dom.innerHTML.match(regex);
+    for(var i=0; i <match.length; i++) {
+        match[i] = match[i].replace(/^<pre.*?>/,"");
+        match[i] = match[i].replace(/<\/pre>$/,"");
+        //console.dir(match[i]);
+        codes.push(text2Dom(match[i]));
+    }
+    return codes;
+}
+
+function parse(dom) {
+    // 取りたいもの
+    // <pre class="line-pre">
+    var codes = getCode4Chrome(dom);
+    var res;
+    var gistCode = [];
+    for(var i=0; i<codes.length; i++) {
+        res = codes[i];
+        var obj = {};
+        var id = res.firstChild.attributes.id.value;
+        var tmp = id.split("-");
+        obj.kind = tmp[tmp.length - 2];
+        obj.id = tmp.slice(1, tmp.length - 1).join("-");
+        tmp = res.innerHTML;
+        res.innerHTML = tmp.replace(/<div class=\"line\"/g,"\n<div class=\"line\"" );
+        obj.code = res.textContent;
+        gistCode.push(obj);
+    }
+
+    var outHtml = document.getElementById("outHtml");
+    var outStyle = document.getElementById("outStyle");
+    var outScript = document.getElementById("outScript");
+
+    for (i = 0; i < gistCode.length; i++) {
+        if (gistCode[i].kind == "html") {
+            //console.log(gistCode[i].code);
+            outHtml.innerHTML += gistCode[i].code;//.replace(/\r/g, "\r\n");
+        }
+        if (gistCode[i].kind == "css") {
+            outStyle.value += gistCode[i].code.replace(/\r/g, "\r\n");
+        }
+        if (gistCode[i].kind == "js") {
+            outScript.value += gistCode[i].code.replace(/\r/g, "\r\n");
+            //outScript.textContent += gistCode[i].code;
+        }
+    }
+    // HTML内のscriptタグをrunstant対応させる
+    // httpで始まるタグは置換しない
+    // ＜script src=hoge.js>＜/script> -> ＜script>${script}＜/script>
+    var bufHtml = outHtml.value.replace(/<script.*?src=\"(.*?)\">/g,
+        function(match, p1, offset, s) {
+            //console.log(match);
+            if (p1.indexOf("http") === 0) {
+                return match;
+            }
+            return "<script>${script}";
+        });
+    outHtml.value = bufHtml;
+
+    // ハッシュを作る
+    var json = JSON.parse(document.getElementById("runstantJson").innerHTML);
+    json.code.html.value = outHtml.value;
+    json.code.style.value = outStyle.value;
+    json.code.script.value = outScript.value;
+    var jsz = new JSZip();
+    jsz.file("data", JSON.stringify(json));
+    var zipedFile = jsz.generate();
+    //encodeURI
+    var myHash = encodeURI(encodeURI(zipedFile));
+    var elm = document.getElementById("hash");
+    elm.value = "http://phi-jp.github.io/runstant/release/alpha/#" + myHash;
+    goBtnEnable();
+}
+function goBtnEnable(){
+    var goBtn = document.getElementById("goBtn");
+    goBtn.style.display="block";
+}
+function goBtnDisable() {
+    var goBtn = document.getElementById("goBtn");
+    goBtn.style.display="none";
+}
+
+function text2Dom(htmlPart) {
+    var dummyDiv = document.createElement("div");
+    dummyDiv.innerHTML = htmlPart;
+    return dummyDiv;
+}
+
+function cb(gistJson) {
+    parse(text2Dom(gistJson.div));
+    parent.location.href=document.getElementById("hash").value;
+}
+
+window.addEventListener("load", function() {
+  // runstatで動かす。
+  var gistId = document.getElementById("gistId").value;
+  getGist(gistId);
+
+
+    function getGist(gistUrl) {
+        //"https://gist.github.com/<ユーザー名>/<Gist ID>.json?calback=<コールバック関数名>"
+        //var gistUrl = "https://gist.github.com/mbostock/6dcc9a177065881b1bc4";
+        gistUrl += ".json?callback=cb";
+        var s = document.createElement('script');
+        s.charset = 'utf-8';
+        s.type = "text/javascript";
+        s.src = gistUrl;
+        document.body.appendChild(s);
+    }
+
+}, false);
+</script>
+</body>
+</html>

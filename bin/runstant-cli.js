@@ -6,15 +6,93 @@ var fs = require("fs");
 var parseArgs = require('minimist');
 var jszip = require("jszip");
 var hogan = require("hogan.js");
-
 var spawn = require('child_process').spawn;
+
 var runstantTempl = fs.readFileSync(__dirname + "/../runstant.hjs", "utf-8");
-var argv = parseArgs(process.argv.slice(2));
 var runstantUrl = "http://phi-jp.github.io/runstant/release/alpha/#";
 
+function openUrl(url) {
+  // OSXなら、open,Windowsならstartで開く
+  //console.log(runstantUrl);
+  if (process.platform == "darwin") {
+    spawn("open", [url]);
+  } else if (process.platform == "win32") {
+    spawn("cmd", ["/C", "start " + url]);
+  } else {
+    console.log(url);
+  }
+}
+
+/**
+ * JSONからハッシュを生成する
+ */
+function json2hash(json) {
+  var t = JSON.stringify(json);
+  var jsz = new jszip();
+  jsz.file("data", t);
+  var zipedFile = jsz.generate();
+  //encodeURI
+  return encodeURI(encodeURI(zipedFile));
+}
+
+/**
+ * gistからrunstantへ変換するrunstantなページを生成する
+ */
+function getFromGist(gistUrl) {
+
+  // 変化用テンプレートの読み込み
+  var gist2runstant = fs.readFileSync(__dirname + "/../gist2runstant.hjs", "utf-8");
+  var obj = {};
+  obj.gistUrl = gistUrl;
+  var html = hogan.compile(gist2runstant).render(obj);
+
+  obj = {};
+  obj.myhtml = "";
+  obj.mycss = "";
+  obj.myjs = "";
+  var jsonStr = hogan.compile(runstantTempl).render(obj);
+  //console.log(jsonStr);
+  // JSON文字列をJSON化する。
+  var chkJson = JSON.parse(jsonStr);
+  chkJson.code.html.value = html;
+  runstantUrl = runstantUrl + json2hash(chkJson);
+
+  openUrl(runstantUrl);
+}
+
+// main
+
+
+var argv = parseArgs(process.argv.slice(2));
+//console.dir(argv);
+
+var targetDir;
+if (argv._.length > 0) {
+  // 引数が指定されている場合
+  if (argv._[0].indexOf("http") === 0) {
+    // URL指定の場合
+    if (argv._[0].indexOf("http://phi-jp.github.io/runstant/release/alpha/") === 0) {
+      console.log("sorry,not implement yet.");
+      process.exit(0);
+    } else {
+      // 指定されたURLをインポートするみたいな
+      getFromGist(argv._[0]);
+      return;
+    }
+  } else {
+    // コマンドラインに指定された文字列をディレクトリとみなして処理する。
+    targetDir = argv._[0];
+  }
+} else {
+  targetDir = "."
+}
+targetDir = targetDir.replace(/\/$/, "");
+
+
+
 // html処理
-// カレントディレクトリの.htmlを読み込む
-var fileList = fs.readdirSync(".");
+// ディレクトリの.htmlを読み込む
+var fileList = fs.readdirSync(targetDir);
 var html = "";
 var js = "";
 var css = "";
@@ -22,15 +100,15 @@ var css = "";
 for (var i = 0; i < fileList.length; i++) {
   if (/.*\html/.test(fileList[i])) {
     // htmlを読み込む。
-    html = fs.readFileSync(fileList[i], "utf-8");
+    html = fs.readFileSync(targetDir + "/" + fileList[i], "utf-8");
   }
   if (/.*\js/.test(fileList[i])) {
     // JavaScriptを読み込む。
-    js = fs.readFileSync(fileList[i], "utf-8");
+    js = fs.readFileSync(targetDir + "/" + fileList[i], "utf-8");
   }
   if (/.*\css/.test(fileList[i])) {
     // JavaScriptを読み込む。
-    css = fs.readFileSync(fileList[i], "utf-8");
+    css = fs.readFileSync(targetDir + "/" + fileList[i], "utf-8");
   }
 
 }
@@ -41,8 +119,8 @@ html = html.replace(/<\/head>/, "<style>${style}</style>\n</head>");
 
 // headタグの<script>${script}</script>を一旦消す。
 // headタグの末尾に<script>${script}</script>を付ける。
-html = html.replace(/<script src=(.*)><\/script>/, function (str,p1,offset){
-  if(str.indexOf("http")>0) {
+html = html.replace(/<script src=(.*)><\/script>/, function(str, p1, offset) {
+  if (str.indexOf("http") > 0) {
     return str;
   }
   return "";
@@ -63,21 +141,7 @@ var chkJson = JSON.parse(jsonStr);
 chkJson.code.html.value = html;
 chkJson.code.style.value = css;
 chkJson.code.script.value = js;
-var t = JSON.stringify(chkJson);
-var jsz = new jszip();
-jsz.file("data", t);
-var zipedFile = jsz.generate();
-//encodeURI
-var myHash = encodeURI(encodeURI(zipedFile));
-runstantUrl = runstantUrl + myHash;
+runstantUrl = runstantUrl + json2hash(chkJson);
 
+openUrl(runstantUrl);
 //console.log(myHash);
-// OSXなら、open,Windowsならstartで開く
-//console.log(runstantUrl);
-if (process.platform == "darwin") {
-  spawn("open", [runstantUrl]);
-} else if (process.platform == "win32") {
-  spawn("cmd", ["/C","start " +runstantUrl]);
-} else {
-  console.log(runstantUrl);
-}
