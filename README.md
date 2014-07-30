@@ -1,6 +1,7 @@
 # 動かし方
 
-## インストール
+## 準備
+
 ```bash
 git clone https://github.com/kjunichi/runstant-cli.git
 cd runstant-cli
