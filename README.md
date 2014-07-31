@@ -16,11 +16,11 @@ npm install
 bin/runstant-cli.js examples
 ```
 
-### Windowsの場合
+### ~~Windowsの場合~~
 
-```bash
-node ../bin/runstant-cli.js examples
-```
+
+~~node ..\bin\runstant-cli.js examples~~
+
 
 
 ### もし気に入ったら、以下でrunstant-cliコマンドがインストールできます。
@@ -29,4 +29,4 @@ node ../bin/runstant-cli.js examples
 npm install -g
 ```
 
-Windowsでもrunstant-cliで実行可能となります。
+~~Windowsでもrunstant-cliで実行可能となります。~~
