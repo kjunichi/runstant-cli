@@ -19,7 +19,7 @@ bin/runstant-cli.js examples
 ### Windowsの場合
 
 ```bash
-node ../bin/runstant-cli.js examples
+node ..\bin\runstant-cli.js examples
 ```
 
 
