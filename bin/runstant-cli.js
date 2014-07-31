@@ -7,6 +7,7 @@ var parseArgs = require('minimist');
 var jszip = require("jszip");
 var hogan = require("hogan.js");
 var spawn = require('child_process').spawn;
+var request = require('request');
 
 var runstantTempl = fs.readFileSync(__dirname + "/../runstant.hjs", "utf-8");
 var runstantUrl = "http://phi-jp.github.io/runstant/release/alpha/#";
@@ -17,7 +18,23 @@ function openUrl(url) {
   if (process.platform == "darwin") {
     spawn("open", [url]);
   } else if (process.platform == "win32") {
-    spawn("cmd", ["/C", "start " + url]);
+
+var options = {
+  url: "https://www.googleapis.com/urlshortener/v1/url",
+  headers: {  'Content-Type': 'application/json' },
+  json: true,
+  body: JSON.stringify({longUrl:url})
+};
+
+request.post(options, function(error, response, body){
+  if (!error && response.statusCode == 200) {
+        spawn("cmd", ["/C", "start " + body.id]);
+  } else {
+    console.log('error: '+ response.statusCode);
+  }
+});
+
+
   } else {
     console.log(url);
   }
@@ -144,4 +161,4 @@ chkJson.code.script.value = js;
 runstantUrl = runstantUrl + json2hash(chkJson);
 
 openUrl(runstantUrl);
-//console.log(myHash);
+//console.log(runstantUrl);
