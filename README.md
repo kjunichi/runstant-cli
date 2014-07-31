@@ -13,15 +13,13 @@ npm install
 ### LinuxやOSXなど
 
 ```bash
-cd examples
-../bin/runstant-cli.js
+bin/runstant-cli.js examples
 ```
 
 ### Windowsの場合
 
 ```bash
-cd examples
-node ../bin/runstant-cli.js
+node ../bin/runstant-cli.js examples
 ```
 
 
@@ -31,3 +29,4 @@ node ../bin/runstant-cli.js
 npm install -g
 ```
 
+Windowsでもrunstant-cliで実行可能となります。
