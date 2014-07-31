@@ -19,20 +19,24 @@ function openUrl(url) {
     spawn("open", [url]);
   } else if (process.platform == "win32") {
 
-var options = {
-  url: "https://www.googleapis.com/urlshortener/v1/url",
-  headers: {  'Content-Type': 'application/json' },
-  json: true,
-  body: JSON.stringify({longUrl:url})
-};
+    var options = {
+      url: "https://www.googleapis.com/urlshortener/v1/url",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      json: true,
+      body: JSON.stringify({
+        longUrl: url
+      })
+    };
 
-request.post(options, function(error, response, body){
-  if (!error && response.statusCode == 200) {
+    request.post(options, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
         spawn("cmd", ["/C", "start " + body.id]);
-  } else {
-    console.log('error: '+ response.statusCode);
-  }
-});
+      } else {
+        console.log('error: ' + response.statusCode);
+      }
+    });
 
 
   } else {
@@ -49,7 +53,7 @@ function json2hash(json) {
   jsz.file("data", t);
   var zipedFile = jsz.generate();
   //encodeURI
-  return encodeURI(encodeURI(zipedFile));
+  return encodeURI(zipedFile);
 }
 
 /**
